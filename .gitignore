@@ -1,0 +1,14 @@
+# Android / Gradle
+.gradle/
+build/
+local.properties
+*.iml
+.idea/
+.DS_Store
+
+# Termux 源码（CI 中克隆）
+termux-app/
+
+# 敏感信息
+*.key
+*.keystore

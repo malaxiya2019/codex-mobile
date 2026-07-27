@@ -1,0 +1,72 @@
+name: 构建 Codex Mobile APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: 设置 Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 克隆 Termux 源码
+        run: |
+          git clone --depth=1 https://github.com/termux/termux-app.git
+          cd termux-app
+
+      - name: 应用定制补丁
+        run: |
+          cd termux-app
+          # 应用我们的补丁（修改首次启动初始化，预装配置）
+          for patch in ../patches/*.patch; do
+            echo "应用补丁: $patch"
+            git apply "$patch"
+          done
+
+      - name: 注入配置文件
+        run: |
+          # 把我们的配置复制到 Termux assets
+          cp -r config/home/. termux-app/app/src/main/assets/codex-home/ 2>/dev/null || true
+          cp -r config/termux/. termux-app/app/src/main/assets/codex-termux/ 2>/dev/null || true
+          cp -r config/bin/. termux-app/app/src/main/assets/codex-bin/ 2>/dev/null || true
+
+      - name: 构建 Debug APK
+        run: |
+          cd termux-app
+          ./gradlew assembleDebug
+
+      - name: 上传 APK 工件
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-mobile-debug
+          path: termux-app/app/build/outputs/apk/debug/*.apk
+
+      - name: 发布 Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: termux-app/app/build/outputs/apk/debug/*.apk
+          body: |
+            ## Codex Mobile ${{ github.ref_name }}
+            
+            ### 安装方法
+            1. 下载 APK
+            2. 允许安装未知来源应用
+            3. 安装后打开 → 自动初始化
+            
+            ### 更新内容
+            见 CHANGELOG
