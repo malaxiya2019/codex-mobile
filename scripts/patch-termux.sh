@@ -11,7 +11,7 @@ echo "📝 修改包名为 com.chinacode.mobile..."
 
 # 1a. TermuxConstants.java
 sed -i 's/TERMUX_PACKAGE_NAME = "com\.termux"/TERMUX_PACKAGE_NAME = "com.chinacode.mobile"/' \
-  ../termux-shared/src/main/java/com/termux/shared/termux/TermuxConstants.java
+  termux-shared/src/main/java/com/termux/shared/termux/TermuxConstants.java
 
 # 1b. app/build.gradle - 添加 applicationId
 sed -i '/^    namespace "com\.termux"/a\    applicationId "com.chinacode.mobile"' \
@@ -31,9 +31,9 @@ sed -i 's/ENTITY TERMUX_APP_NAME "Termux"/ENTITY TERMUX_APP_NAME "ChinaCode"/' \
 
 # 1e. termux-shared strings.xml
 sed -i 's/ENTITY TERMUX_PACKAGE_NAME "com\.termux"/ENTITY TERMUX_PACKAGE_NAME "com.chinacode.mobile"/' \
-  ../termux-shared/src/main/res/values/strings.xml
+  termux-shared/src/main/res/values/strings.xml
 sed -i 's/ENTITY TERMUX_APP_NAME "Termux"/ENTITY TERMUX_APP_NAME "ChinaCode"/' \
-  ../termux-shared/src/main/res/values/strings.xml
+  termux-shared/src/main/res/values/strings.xml
 
 # ============================================
 # 2. 添加 CodexMobileSetup.java
