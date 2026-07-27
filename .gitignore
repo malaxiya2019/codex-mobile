@@ -13,3 +13,4 @@ termux-app/
 *.key
 *.keystore
 *.apk
+*.zip
