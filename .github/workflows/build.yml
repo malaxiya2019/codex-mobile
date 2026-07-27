@@ -40,7 +40,7 @@ jobs:
           # tar 打包保留权限（包括可执行位），这样解压后 login 等文件自动有执行权限
           echo "📦 打包 bootstrap 到 assets..."
           tar czf termux-app/app/src/main/assets/codex-mobile/bootstrap.tar.gz \
-            -C bootstrap-tmp/data/data/com.termux/files/usr .
+            -C bootstrap-tmp .
           rm -rf bootstrap-tmp bootstrap.zip
           echo "✅ bootstrap 预置完成 ($(du -sh termux-app/app/src/main/assets/codex-mobile/bootstrap.tar.gz | cut -f1))"
 
