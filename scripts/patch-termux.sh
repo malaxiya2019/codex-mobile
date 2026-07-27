@@ -22,11 +22,14 @@ sed -i 's/compileSdkVersion project.properties.compileSdkVersion.toInteger()/com
 # ============================================
 echo "📝 修改包名为 com.chinacode.mobile..."
 
+# 注意：不改 namespace！namespace 决定 R 类路径。
+# 只改 applicationId（安装包名）和显示名称即可共存。
+
 # 2a. TermuxConstants.java
 sed -i 's/TERMUX_PACKAGE_NAME = "com\.termux"/TERMUX_PACKAGE_NAME = "com.chinacode.mobile"/' \
   termux-shared/src/main/java/com/termux/shared/termux/TermuxConstants.java
 
-# 2b. app/build.gradle - 添加 applicationId（在 defaultConfig 块内）
+# 2b. app/build.gradle - 在 defaultConfig 内添加 applicationId
 sed -i '/minSdkVersion/i\        applicationId "com.chinacode.mobile"' \
   app/build.gradle
 
@@ -36,17 +39,13 @@ sed -i 's/manifestPlaceholders\.TERMUX_PACKAGE_NAME = "com\.termux"/manifestPlac
 sed -i 's/manifestPlaceholders\.TERMUX_APP_NAME = "Termux"/manifestPlaceholders.TERMUX_APP_NAME = "ChinaCode"/' \
   app/build.gradle
 
-# 2d. 改 namespace
-sed -i 's/namespace "com\.termux"/namespace "com.chinacode.mobile"/' \
-  app/build.gradle 2>/dev/null || true
-
-# 2e. app strings.xml
+# 2d. app strings.xml
 sed -i 's/ENTITY TERMUX_PACKAGE_NAME "com\.termux"/ENTITY TERMUX_PACKAGE_NAME "com.chinacode.mobile"/' \
   app/src/main/res/values/strings.xml
 sed -i 's/ENTITY TERMUX_APP_NAME "Termux"/ENTITY TERMUX_APP_NAME "ChinaCode"/' \
   app/src/main/res/values/strings.xml
 
-# 2f. termux-shared strings.xml
+# 2e. termux-shared strings.xml
 sed -i 's/ENTITY TERMUX_PACKAGE_NAME "com\.termux"/ENTITY TERMUX_PACKAGE_NAME "com.chinacode.mobile"/' \
   termux-shared/src/main/res/values/strings.xml
 sed -i 's/ENTITY TERMUX_APP_NAME "Termux"/ENTITY TERMUX_APP_NAME "ChinaCode"/' \
