@@ -11,9 +11,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+      
       - name: 设置 JDK 21
         uses: actions/setup-java@v4
         with:
@@ -24,49 +23,95 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: 克隆 Termux 源码
-        run: |
-          git clone --depth=1 https://github.com/termux/termux-app.git
-          cd termux-app
+        run: git clone --depth=1 https://github.com/termux/termux-app.git
 
-      - name: 应用定制补丁
+      - name: 打包配置
+        run: |
+          mkdir -p termux-app/app/src/main/assets/codex-mobile
+          # 打包配置
+          tar czf termux-app/app/src/main/assets/codex-mobile/setup.tar.gz \
+            -C config/home . \
+            -C ../termux .termux \
+            -C ../bin .local/bin \
+            -C ../codex .codex 2>/dev/null || true
+          cp scripts/install-codex.sh termux-app/app/src/main/assets/codex-mobile/
+
+      - name: 注入首次启动钩子
         run: |
           cd termux-app
-          # 应用我们的补丁（修改首次启动初始化，预装配置）
-          for patch in ../patches/*.patch; do
-            echo "应用补丁: $patch"
-            git apply "$patch"
-          done
+          # 添加 Java 文件
+          cat > app/src/main/java/com/termux/app/CodexMobileSetup.java << 'JAVA'
+package com.termux.app;
 
-      - name: 注入配置文件
-        run: |
-          # 把我们的配置复制到 Termux assets
-          cp -r config/home/. termux-app/app/src/main/assets/codex-home/ 2>/dev/null || true
-          cp -r config/termux/. termux-app/app/src/main/assets/codex-termux/ 2>/dev/null || true
-          cp -r config/bin/. termux-app/app/src/main/assets/codex-bin/ 2>/dev/null || true
+import android.content.res.AssetManager;
+import java.io.*;
+
+public class CodexMobileSetup {
+    public static void install(File homeDir, AssetManager am) {
+        try {
+            File marker = new File(homeDir, ".codex-mobile-done");
+            if (marker.exists()) return;
+            
+            // 复制并解压配置
+            InputStream in = am.open("codex-mobile/setup.tar.gz");
+            File tmp = new File(homeDir, ".codex-mobile.tar.gz");
+            FileOutputStream out = new FileOutputStream(tmp);
+            byte[] buf = new byte[8192];
+            int len;
+            while ((len = in.read(buf)) != -1) out.write(buf, 0, len);
+            out.close();
+            in.close();
+            
+            // 解压
+            Process p = Runtime.getRuntime().exec(
+                new String[]{"tar", "xzf", tmp.getAbsolutePath(), "-C", homeDir.getAbsolutePath()}
+            );
+            p.waitFor();
+            tmp.delete();
+            marker.createNewFile();
+        } catch (Exception e) {
+            // 静默处理
+        }
+    }
+}
+JAVA
+
+          # 在 TermuxService.onCreate() 中调用
+          sed -i 's/setupShellEnvironment(thread);/setupShellEnvironment(thread);\n            CodexMobileSetup.install(thread.mShellHomeDir, getAssets());/' \
+            app/src/main/java/com/termux/app/TermuxService.java || true
 
       - name: 构建 Debug APK
         run: |
           cd termux-app
           ./gradlew assembleDebug
 
-      - name: 上传 APK 工件
+      - name: 上传 APK
         uses: actions/upload-artifact@v4
         with:
-          name: codex-mobile-debug
+          name: codex-mobile-${{ github.ref_name || 'latest' }}
           path: termux-app/app/build/outputs/apk/debug/*.apk
 
-      - name: 发布 Release
+      - name: 创建 Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: termux-app/app/build/outputs/apk/debug/*.apk
           body: |
-            ## Codex Mobile ${{ github.ref_name }}
+            ## 🎉 Codex Mobile ${{ github.ref_name }}
             
-            ### 安装方法
-            1. 下载 APK
-            2. 允许安装未知来源应用
-            3. 安装后打开 → 自动初始化
+            **定价: 49.9 元**
             
-            ### 更新内容
-            见 CHANGELOG
+            ### 📥 安装
+            1. 下载 APK 并安装
+            2. 打开 → 自动配置完成
+            3. 运行 `curl -fsSL https://codex.so/install.sh | sh`
+            4. 输入 `cyo --zh` 启动
+            
+            ### ✨ 包含
+            - 定制 Termux 终端
+            - 43 个 Codex Skills
+            - 一键启动脚本 (cyo --zh)
+            - 中文优化配置
+            
+            ### 🔄 更新内容
+            ${{ github.event.head_commit.message }}
