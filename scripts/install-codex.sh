@@ -1,5 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# Codex Mobile - 安装脚本（首次启动后运行）
+# ChinaCode - 安装脚本（首次启动后运行）
 
 echo "📦 安装 Codex CLI..."
 curl -fsSL https://codex.so/install.sh | CODEX_DANGEROUS_APPROVAL=1 sh

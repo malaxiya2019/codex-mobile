@@ -1,4 +1,4 @@
-name: 构建 Codex Mobile APK
+name: 构建 ChinaCode APK
 
 on:
   push:
@@ -32,19 +32,16 @@ jobs:
       - name: 打包配置
         run: |
           mkdir -p termux-app/app/src/main/assets/codex-mobile
-          # 用 staging 目录构建正确的文件结构
           SETUP_DIR="$(mktemp -d)"
           mkdir -p "$SETUP_DIR/.termux"
           mkdir -p "$SETUP_DIR/.local/bin"
           mkdir -p "$SETUP_DIR/.codex/skills"
-          # 复制各配置到对应路径
           cp config/home/* "$SETUP_DIR/" 2>/dev/null || true
           cp config/termux/* "$SETUP_DIR/.termux/" 2>/dev/null || true
           cp config/bin/* "$SETUP_DIR/.local/bin/" 2>/dev/null || true
           cp -r config/codex/skills/* "$SETUP_DIR/.codex/skills/" 2>/dev/null || true
           cp config/scripts/backup-termux-codex.sh "$SETUP_DIR/" 2>/dev/null || true
           cp scripts/install-codex.sh "$SETUP_DIR/" 2>/dev/null || true
-          # 打包
           tar czf termux-app/app/src/main/assets/codex-mobile/setup.tar.gz \
             -C "$SETUP_DIR" .
           rm -rf "$SETUP_DIR"
@@ -60,7 +57,7 @@ jobs:
       - name: 上传 APK (Artifact)
         uses: actions/upload-artifact@v4
         with:
-          name: codex-mobile-${{ github.ref_name || 'latest' }}
+          name: chinacode-${{ github.ref_name || 'latest' }}
           path: termux-app/app/build/outputs/apk/debug/*.apk
 
       - name: 创建 Release
@@ -69,12 +66,12 @@ jobs:
         with:
           files: termux-app/app/build/outputs/apk/debug/*.apk
           body: |
-            ## Codex Mobile ${{ github.ref_name }}
+            ## ChinaCode ${{ github.ref_name }}
 
             定价: 49.9 元
 
             安装:
-            1. 下载 APK 安装
+            1. 下载 APK 安装（可与原版 Termux 共存）
             2. 打开自动配置完成
             3. 运行 curl -fsSL https://codex.so/install.sh | sh
             4. 输入 cyo --zh 启动

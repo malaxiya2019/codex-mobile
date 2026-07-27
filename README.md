@@ -1,4 +1,4 @@
-# Codex Mobile 📱
+# ChinaCode 📱
 
 > 手机上的 AI 编程环境 — 基于 Termux + Codex CLI + DeepSeek
 
@@ -39,7 +39,7 @@ cyo --zh
 ## 📦 包含内容
 
 ```
-📁 Codex Mobile v1.0
+📁 ChinaCode v1.0
 ├── 📱 定制 Termux APK
 │   ├── 预装 .bashrc（cyo/cy/cs 等别名）
 │   ├── 预装终端美化配置
@@ -65,7 +65,7 @@ cyo --zh
 
 ```
 ┌──────────────────────────────────┐
-│        Codex Mobile APK          │
+│        ChinaCode APK          │
 │  ┌────────────────────────────┐  │
 │  │  Termux（预装配置）        │  │
 │  │  ├── .bashrc + 别名       │  │
@@ -96,8 +96,8 @@ cyo --zh
 
 ```bash
 # 本地构建
-git clone https://github.com/malaxiya2019/codex-mobile.git
-cd codex-mobile
+git clone https://github.com/malaxiya2019/chinacode.git
+cd chinacode
 # 触发 GitHub Actions 自动构建
 git tag v1.0.0 && git push --tags
 ```

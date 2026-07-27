@@ -1,4 +1,4 @@
-# Codex Mobile - 预装配置
+# ChinaCode - 预装配置
 export PATH="$HOME/.local/bin:$PATH"
 
 # 别名
@@ -8,7 +8,7 @@ alias cs='codex --ask-for-approval on-request'
 
 # cyo = YOLO + 自动恢复 + 中文模式
 cyo() {
-    echo "[cyo] 启动 Codex Mobile..."
+    echo "[cyo] 启动 ChinaCode..."
     
     if ! curl -s -f --connect-timeout 2 http://127.0.0.1:8788/v1/models > /dev/null 2>&1; then
         echo "[cyo] 启动 mimo2codex..."
@@ -28,4 +28,4 @@ cyo() {
 # 状态检查
 alias st='ps aux | grep -E "mimo2codex|codex" | grep -v grep'
 
-echo "✅ Codex Mobile 已就绪！输入 cyo --zh 启动"
+echo "✅ ChinaCode 已就绪！输入 cyo --zh 启动"

@@ -12,3 +12,4 @@ termux-app/
 # 敏感信息
 *.key
 *.keystore
+*.apk
