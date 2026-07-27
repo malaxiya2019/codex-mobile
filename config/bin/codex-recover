@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# 显示帮助
+if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    echo "用法: codex-recover [选项]"
+    echo ""
+    echo "选项:"
+    echo "  -n, --no-tmux   只恢复服务，不进入 tmux"
+    echo "  -h, --help      显示帮助"
+    exit 0
+fi
+
+echo "🔄 开始恢复 Codex Environment..."
+
+# ============================================
+# 健康检查函数 (用 curl 探测替代 lsof，更契合无 Root 环境)
+# ============================================
+check_mimo() {
+    curl -s -f --connect-timeout 2 http://127.0.0.1:8788/v1/models > /dev/null 2>&1
+    return $?
+}
+
+# ============================================
+# 1. 检查并启动 mimo2codex
+# ============================================
+if ! check_mimo; then
+    echo "📡 启动 mimo2codex..."
+    pkill -f "mimo2codex" 2>/dev/null
+    nohup mimo2codex --model ds --port 8788 > ~/mimo2codex.log 2>&1 &
+    sleep 3
+    
+    # 再次检查
+    if ! check_mimo; then
+        echo "❌ mimo2codex 启动失败"
+        echo "   查看日志: cat ~/mimo2codex.log"
+        exit 1
+    fi
+    echo "✅ mimo2codex 启动成功"
+else
+    echo "✅ mimo2codex 运行正常"
+fi
+
+# ============================================
+# 2. 检查并启动 threadripper
+# ============================================
+if [ -f ~/.local/bin/threadripper.js ]; then
+    if ! pgrep -f "threadripper.js" > /dev/null; then
+        echo "🧵 启动 threadripper..."
+        nohup node ~/.local/bin/threadripper.js > ~/threadripper.log 2>&1 &
+        sleep 1
+        echo "✅ threadripper 启动成功"
+    else
+        echo "✅ threadripper 运行正常"
+    fi
+else
+    echo "⚠️ threadripper.js 不存在，跳过"
+fi
+
+# ============================================
+# 3. 检查 codex 是否在 PATH 中
+# ============================================
+if ! command -v codex > /dev/null 2>&1; then
+    echo "⚠️ codex 命令未找到，请确保已安装并加入 PATH"
+fi
+
+# ============================================
+# 4. 进入 tmux 或直接退出
+# ============================================
+if [ "$1" == "-n" ] || [ "$1" == "--no-tmux" ]; then
+    echo ""
+    echo "✅ 恢复完成（服务已启动，未进入 tmux）"
+    echo ""
+    echo "📋 服务状态:"
+    echo "   mimo2codex:  http://127.0.0.1:8788"
+    ps aux | grep -E "mimo2codex|threadripper" | grep -v grep | awk '{print "   " $0}'
+    exit 0
+fi
+
+# 进入 tmux
+if command -v tmux > /dev/null 2>&1; then
+    echo ""
+    echo "✅ 恢复完成，进入 tmux 会话..."
+    echo "   (会话名: codex)"
+    echo ""
+    sleep 1
+    if tmux has-session -t codex 2>/dev/null; then
+        tmux attach -t codex
+    else
+        tmux new -s codex
+    fi
+else
+    echo ""
+    echo "⚠️ tmux 未安装，直接启动 codex..."
+    codex
+fi

@@ -1,0 +1,43 @@
+#!/bin/bash
+echo "📊 Codex 服务状态"
+echo "=================="
+echo ""
+
+# mimo2codex
+if curl -s -f --connect-timeout 2 http://127.0.0.1:8788/v1/models > /dev/null 2>&1; then
+    echo "✅ mimo2codex:  运行正常 (端口 8788)"
+else
+    # 进一步区分是完全没启动，还是启动了但拒绝连接
+    if pgrep -f "mimo2codex" > /dev/null; then
+        echo "⚠️ mimo2codex:  进程存在，但端口无响应 (可能正在热加载或配置错误)"
+    else
+        echo "❌ mimo2codex:  未运行"
+    fi
+fi
+
+# threadripper
+if pgrep -f "threadripper.js" > /dev/null 2>&1; then
+    echo "✅ threadripper: 运行中"
+else
+    echo "❌ threadripper: 未运行"
+fi
+
+# tmux
+if command -v tmux > /dev/null 2>&1; then
+    if tmux has-session -t codex 2>/dev/null; then
+        echo "✅ tmux 会话:    codex (已存在)"
+    else
+        echo "ℹ️ tmux 会话:    无 codex 会话"
+    fi
+fi
+
+# codex
+if command -v codex > /dev/null 2>&1; then
+    echo "✅ codex 命令:   可用"
+else
+    echo "❌ codex 命令:   未找到"
+fi
+
+echo ""
+echo "📋 进程详情:"
+ps aux | grep -E "mimo2codex|threadripper|codex" | grep -v grep | grep -v codex-status
